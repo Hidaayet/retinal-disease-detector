@@ -133,7 +133,7 @@ Note: dataset is imbalanced — grade 0 dominates. Handled via weighted loss.
 Then create `.gitignore` in the root:
 ```
 # Dataset and images
-data/train/
+data/train_images/
 *.png
 *.jpg
 *.jpeg

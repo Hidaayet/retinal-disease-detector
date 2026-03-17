@@ -1,0 +1,16 @@
+# Dataset and images
+data/
+*.png
+*.jpg
+*.jpeg
+
+# Model weights
+*.pth
+*.pt
+
+# Python cache
+__pycache__/
+*.pyc
+
+# Jupyter checkpoints
+.ipynb_checkpoints/

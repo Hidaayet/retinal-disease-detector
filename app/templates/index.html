@@ -1,0 +1,377 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Retinal Disease Detector</title>
+    <style>
+        * { margin: 0; padding: 0; box-sizing: border-box; }
+
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, 
+                         'Segoe UI', sans-serif;
+            background: #0f1117;
+            color: #e0e0e0;
+            min-height: 100vh;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            padding: 40px 20px;
+        }
+
+        h1 {
+            font-size: 28px;
+            font-weight: 600;
+            margin-bottom: 8px;
+            color: #ffffff;
+        }
+
+        .subtitle {
+            color: #888;
+            font-size: 14px;
+            margin-bottom: 40px;
+            text-align: center;
+        }
+
+        .card {
+            background: #1a1d27;
+            border: 1px solid #2a2d3a;
+            border-radius: 16px;
+            padding: 32px;
+            width: 100%;
+            max-width: 600px;
+            margin-bottom: 24px;
+        }
+
+        .upload-area {
+            border: 2px dashed #2a2d3a;
+            border-radius: 12px;
+            padding: 48px 24px;
+            text-align: center;
+            cursor: pointer;
+            transition: border-color 0.2s;
+        }
+
+        .upload-area:hover {
+            border-color: #4a9eff;
+        }
+
+        .upload-area.dragover {
+            border-color: #4a9eff;
+            background: rgba(74, 158, 255, 0.05);
+        }
+
+        .upload-icon {
+            font-size: 48px;
+            margin-bottom: 16px;
+        }
+
+        .upload-text {
+            color: #888;
+            font-size: 14px;
+            margin-top: 8px;
+        }
+
+        #file-input {
+            display: none;
+        }
+
+        .btn {
+            background: #4a9eff;
+            color: white;
+            border: none;
+            padding: 12px 28px;
+            border-radius: 8px;
+            font-size: 15px;
+            cursor: pointer;
+            margin-top: 20px;
+            width: 100%;
+            transition: background 0.2s;
+        }
+
+        .btn:hover { background: #357abd; }
+        .btn:disabled { background: #2a2d3a; cursor: not-allowed; }
+
+        #preview-container {
+            display: none;
+            margin-top: 20px;
+            text-align: center;
+        }
+
+        #preview {
+            max-width: 100%;
+            max-height: 300px;
+            border-radius: 8px;
+            border: 1px solid #2a2d3a;
+        }
+
+        #result-card {
+            display: none;
+            background: #1a1d27;
+            border: 1px solid #2a2d3a;
+            border-radius: 16px;
+            padding: 32px;
+            width: 100%;
+            max-width: 600px;
+        }
+
+        .grade-badge {
+            display: inline-block;
+            padding: 6px 16px;
+            border-radius: 20px;
+            font-size: 13px;
+            font-weight: 600;
+            margin-bottom: 16px;
+        }
+
+        .result-title {
+            font-size: 24px;
+            font-weight: 600;
+            color: #ffffff;
+            margin-bottom: 8px;
+        }
+
+        .result-description {
+            color: #888;
+            font-size: 14px;
+            line-height: 1.6;
+            margin-bottom: 20px;
+        }
+
+        .recommendation {
+            background: rgba(74, 158, 255, 0.1);
+            border-left: 3px solid #4a9eff;
+            padding: 12px 16px;
+            border-radius: 0 8px 8px 0;
+            font-size: 14px;
+            color: #a0c4ff;
+            margin-bottom: 24px;
+        }
+
+        .scores-title {
+            font-size: 13px;
+            color: #888;
+            margin-bottom: 12px;
+            text-transform: uppercase;
+            letter-spacing: 0.5px;
+        }
+
+        .score-row {
+            display: flex;
+            align-items: center;
+            margin-bottom: 8px;
+            gap: 10px;
+        }
+
+        .score-label {
+            font-size: 13px;
+            width: 140px;
+            color: #aaa;
+        }
+
+        .score-bar-bg {
+            flex: 1;
+            background: #2a2d3a;
+            border-radius: 4px;
+            height: 8px;
+            overflow: hidden;
+        }
+
+        .score-bar {
+            height: 100%;
+            border-radius: 4px;
+            transition: width 0.6s ease;
+        }
+
+        .score-value {
+            font-size: 13px;
+            width: 45px;
+            text-align: right;
+            color: #aaa;
+        }
+
+        .loading {
+            text-align: center;
+            padding: 20px;
+            color: #888;
+            display: none;
+        }
+
+        .spinner {
+            width: 32px;
+            height: 32px;
+            border: 3px solid #2a2d3a;
+            border-top-color: #4a9eff;
+            border-radius: 50%;
+            animation: spin 0.8s linear infinite;
+            margin: 0 auto 12px;
+        }
+
+        @keyframes spin {
+            to { transform: rotate(360deg); }
+        }
+
+        .disclaimer {
+            font-size: 12px;
+            color: #555;
+            text-align: center;
+            max-width: 600px;
+            line-height: 1.6;
+        }
+    </style>
+</head>
+<body>
+
+    <h1>🔬 Retinal Disease Detector</h1>
+    <p class="subtitle">
+        EfficientNet-B3 · Diabetic Retinopathy Detection · 
+        Kappa 0.9053
+    </p>
+
+    <div class="card">
+        <div class="upload-area" id="upload-area"
+             onclick="document.getElementById('file-input').click()">
+            <div class="upload-icon">👁️</div>
+            <div style="font-size:16px;color:#ccc">
+                Drop a fundus image here
+            </div>
+            <div class="upload-text">or click to browse · JPG, PNG</div>
+        </div>
+
+        <input type="file" id="file-input" 
+               accept="image/*" onchange="handleFile(this.files[0])">
+
+        <div id="preview-container">
+            <img id="preview" src="" alt="Preview">
+        </div>
+
+        <button class="btn" id="analyze-btn" 
+                onclick="analyze()" disabled>
+            Analyze Image
+        </button>
+    </div>
+
+    <div class="loading" id="loading">
+        <div class="spinner"></div>
+        Analyzing retinal image...
+    </div>
+
+    <div id="result-card">
+        <div class="grade-badge" id="grade-badge"></div>
+        <div class="result-title" id="result-title"></div>
+        <div class="result-description" id="result-description"></div>
+        <div class="recommendation" id="recommendation"></div>
+        <div class="scores-title">Confidence per grade</div>
+        <div id="score-bars"></div>
+    </div>
+
+    <p class="disclaimer">
+        ⚠️ This tool is for research and educational purposes only.
+        It is not a substitute for professional medical diagnosis.
+        Always consult a qualified ophthalmologist.
+    </p>
+
+    <script>
+        let selectedFile = null;
+
+        const uploadArea = document.getElementById('upload-area');
+
+        uploadArea.addEventListener('dragover', e => {
+            e.preventDefault();
+            uploadArea.classList.add('dragover');
+        });
+
+        uploadArea.addEventListener('dragleave', () => {
+            uploadArea.classList.remove('dragover');
+        });
+
+        uploadArea.addEventListener('drop', e => {
+            e.preventDefault();
+            uploadArea.classList.remove('dragover');
+            handleFile(e.dataTransfer.files[0]);
+        });
+
+        function handleFile(file) {
+            if (!file) return;
+            selectedFile = file;
+
+            const reader = new FileReader();
+            reader.onload = e => {
+                document.getElementById('preview').src = e.target.result;
+                document.getElementById('preview-container')
+                        .style.display = 'block';
+                document.getElementById('analyze-btn').disabled = false;
+                document.getElementById('result-card').style.display = 'none';
+            };
+            reader.readAsDataURL(file);
+        }
+
+        async function analyze() {
+            if (!selectedFile) return;
+
+            document.getElementById('loading').style.display = 'block';
+            document.getElementById('result-card').style.display = 'none';
+            document.getElementById('analyze-btn').disabled = true;
+
+            const formData = new FormData();
+            formData.append('file', selectedFile);
+
+            try {
+                const response = await fetch('/predict', {
+                    method: 'POST',
+                    body: formData
+                });
+                const data = await response.json();
+
+                document.getElementById('loading').style.display = 'none';
+                document.getElementById('analyze-btn').disabled = false;
+
+                if (data.error) {
+                    alert('Error: ' + data.error);
+                    return;
+                }
+
+                // fill results
+                const badge = document.getElementById('grade-badge');
+                badge.textContent = `Grade ${data.grade} — ${data.label}`;
+                badge.style.background = data.color + '22';
+                badge.style.color = data.color;
+                badge.style.border = `1px solid ${data.color}44`;
+
+                document.getElementById('result-title').textContent = data.full;
+                document.getElementById('result-description')
+                        .textContent = data.description;
+                document.getElementById('recommendation')
+                        .textContent = '💡 ' + data.recommendation;
+
+                // score bars
+                const barsDiv = document.getElementById('score-bars');
+                barsDiv.innerHTML = '';
+                const colors = ['#2ecc71','#f1c40f',
+                                '#e67e22','#e74c3c','#8e44ad'];
+                Object.entries(data.all_scores).forEach(([label, score], i) => {
+                    barsDiv.innerHTML += `
+                        <div class="score-row">
+                            <span class="score-label">${label}</span>
+                            <div class="score-bar-bg">
+                                <div class="score-bar" 
+                                     style="width:${score}%;
+                                            background:${colors[i]}">
+                                </div>
+                            </div>
+                            <span class="score-value">${score}%</span>
+                        </div>`;
+                });
+
+                document.getElementById('result-card').style.display = 'block';
+
+            } catch(err) {
+                document.getElementById('loading').style.display = 'none';
+                document.getElementById('analyze-btn').disabled = false;
+                alert('Error connecting to server');
+            }
+        }
+    </script>
+
+</body>
+</html>

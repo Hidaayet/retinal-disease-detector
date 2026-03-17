@@ -74,11 +74,11 @@ retinal-disease-detector/
 ## Progress log
 
 - [x] Project defined and documented
-- [ ] Data exploration
-- [ ] Model training
-- [ ] Model evaluation
-- [ ] Web app deployment
-- [ ] Demo
+- [x] Data exploration
+- [x] Model training — kappa 0.9053
+- [x] Model evaluation
+- [x] Web app — working locally
+- [ ] Demo video
 
 ---
 
@@ -86,4 +86,3 @@ retinal-disease-detector/
 
 **Hidayet Allah Yaakoubi**
 Engineering student — Tunisia
-```
