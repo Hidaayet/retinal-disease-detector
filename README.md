@@ -68,6 +68,11 @@ retinal-disease-detector/
 │   └── SPEC.md
 └── README.md
 ```
+## 🚀 Live Demo
+
+**Try it here:** https://huggingface.co/spaces/hidayet-yaakoubi/retinal-disease-detector
+
+Upload any fundus retinal image and get an instant diabetic retinopathy severity grade.
 
 ---
 
@@ -78,6 +83,7 @@ retinal-disease-detector/
 - [x] Model training — kappa 0.9053
 - [x] Model evaluation
 - [x] Web app — working locally
+- [x] Deployed online — live public demo
 - [ ] Demo video
 
 ---
