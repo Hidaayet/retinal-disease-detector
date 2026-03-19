@@ -4,8 +4,6 @@ A deep learning web application that detects diabetic retinopathy severity
 from fundus retinal images using EfficientNet-B3, achieving medical-grade
 classification across 5 severity levels.
 
->  Project status: In progress — Phase 1 (model training)
-
 ---
 
 ## What it does
