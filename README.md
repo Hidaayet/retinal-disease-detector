@@ -89,7 +89,7 @@ Upload any fundus retinal image and get an instant diabetic retinopathy severity
 ---
 ## 📄 Full Project Report
 
-For a detailed explanation of the dataset, model architecture, training methodology, and results, see the [full project report](docs/Retinal_Disease_Detector_Report.pdf).
+For a detailed explanation of the dataset, model architecture, training methodology, and results, see the **[full project report](docs/Retinal_Disease_Detector_Report.pdf)**.
 
 ---
 
