@@ -1,6 +1,5 @@
 # Dataset and images
 data/
-*.png
 *.jpg
 *.jpeg
 
