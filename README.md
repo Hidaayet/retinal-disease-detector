@@ -106,6 +106,7 @@ would directly address this gap.
 | APTOS 2019 competition winner | ~0.930 |
 
 ### Evaluation Visualization
+
 ![Detailed Evaluation](outputs/detailed_evaluation.png)
 
 ### Data Split Details
@@ -121,7 +122,7 @@ would directly address this gap.
   random seed 42 for reproducibility
 
 ---
-## 🚀 Live Demo
+##  Live Demo
 
 **Try it here:** https://huggingface.co/spaces/hidayet-yaakoubi/retinal-disease-detector
 
@@ -140,7 +141,7 @@ Upload any fundus retinal image and get an instant diabetic retinopathy severity
 - [ ] Demo video
 
 ---
-## 📄 Full Project Report
+##  Full Project Report
 
 For a detailed explanation of the dataset, model architecture, training methodology, and results, see the **[full project report](docs/Retinal_Disease_Detector_Report.pdf)**.
 
@@ -149,4 +150,4 @@ For a detailed explanation of the dataset, model architecture, training methodol
 ## Author
 
 **Hidayet Allah Yaakoubi**
-Engineering student — Tunisia
+BME — Tunisia
