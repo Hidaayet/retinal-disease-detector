@@ -5,6 +5,8 @@ from fundus retinal images using EfficientNet-B3, achieving medical-grade
 classification across 5 severity levels.
 
 ---
+>  **Project status: Complete** — Model trained, evaluated, and deployed
+---
 
 ## What it does
 
@@ -27,9 +29,9 @@ for each class — in under 2 seconds.
 
 ---
 
-## System overview
+## System Architecture
 
-*Diagram coming soon*
+![Architecture](outputs/architecture_diagram.png)
 
 ---
 
@@ -117,7 +119,7 @@ would directly address this gap.
   is reported here
 - **Cross-validation:** Not performed — single split with fixed
   random seed 42 for reproducibility
-  
+
 ---
 ## 🚀 Live Demo
 
