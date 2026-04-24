@@ -31,7 +31,7 @@ for each class — in under 2 seconds.
 
 ## System Architecture
 
-![Architecture](outputs/architecture_diagram.png)
+![Architecture](outputs/retinal_architecture.png)
 
 ---
 
