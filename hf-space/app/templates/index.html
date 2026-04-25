@@ -914,38 +914,6 @@ function displayResult(data) {
     new Date().toLocaleTimeString('en-GB', {hour:'2-digit', minute:'2-digit'});
 }
 
-  // confidence bars
-  const container = document.getElementById('conf-bars');
-  container.innerHTML = '';
-  conf.forEach((p, i) => {
-    const pct = Math.round(p * 100);
-    container.innerHTML += `
-      <div class="conf-row">
-        <div class="conf-label">Grade ${i} — ${GRADES[i].label.split(' ')[0]}</div>
-        <div class="conf-bar-bg">
-          <div class="conf-bar-fill" style="width:0%;background:${GRADES[i].barColor}"
-               data-width="${pct}"></div>
-        </div>
-        <div class="conf-pct">${pct}%</div>
-      </div>`;
-  });
-  setTimeout(() => {
-    container.querySelectorAll('.conf-bar-fill').forEach(bar => {
-      bar.style.width = bar.dataset.width + '%';
-    });
-  }, 50);
-
-  // recommendation
-  const rec = document.getElementById('rec-block');
-  rec.style.background = g.bg;
-  rec.style.borderColor = g.color;
-  rec.style.color = g.color;
-  document.getElementById('rec-text').textContent = ' ' + g.rec;
-
-  // timestamp
-  document.getElementById('result-timestamp').textContent =
-    new Date().toLocaleTimeString('en-GB', {hour:'2-digit',minute:'2-digit'});
-}
 </script>
 </body>
 </html>
