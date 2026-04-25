@@ -2,12 +2,13 @@ import io
 import logging
 import os
 import base64
-import torch.nn.functional as F
+
 import cv2
 import numpy as np
 import timm
 import torch
 import torch.nn as nn
+import torch.nn.functional as F
 from flask import Flask, jsonify, render_template, request
 from PIL import Image
 from torchvision import transforms
@@ -25,7 +26,7 @@ app = Flask(__name__)
 # ── constants ──────────────────────────────────────────────────────────────
 MAX_FILE_SIZE_MB = 10
 ALLOWED_EXTENSIONS = {"png", "jpg", "jpeg"}
-LOW_CONFIDENCE_THRESHOLD = 0.60   # warn user below this
+LOW_CONFIDENCE_THRESHOLD = 0.60
 
 # ── model definition ───────────────────────────────────────────────────────
 class RetinalClassifier(nn.Module):
@@ -45,6 +46,7 @@ class RetinalClassifier(nn.Module):
     def forward(self, x):
         return self.classifier(self.backbone(x))
 
+
 # ── Grad-CAM ───────────────────────────────────────────────────────────────
 class GradCAM:
     """Gradient-weighted Class Activation Mapping for EfficientNet-B3."""
@@ -53,7 +55,6 @@ class GradCAM:
         self.model = model
         self.activations = None
         self.gradients = None
-        # hook onto the last conv layer before global pooling
         target = model.backbone.conv_head
         target.register_forward_hook(self._save_activation)
         target.register_full_backward_hook(self._save_gradient)
@@ -80,17 +81,16 @@ class GradCAM:
 
 
 def _overlay_heatmap(image_bytes: bytes, cam: np.ndarray) -> str:
-    """Blend Grad-CAM heatmap onto the original image, return as base64 PNG."""
+    """Blend Grad-CAM heatmap onto original image, return base64 PNG."""
     img = Image.open(io.BytesIO(image_bytes)).convert("RGB").resize((300, 300))
     img_np = np.array(img)
-
     heatmap = cv2.applyColorMap(np.uint8(255 * cam), cv2.COLORMAP_JET)
     heatmap = cv2.cvtColor(heatmap, cv2.COLOR_BGR2RGB)
     overlay = (0.55 * img_np + 0.45 * heatmap).clip(0, 255).astype(np.uint8)
-
     buf = io.BytesIO()
     Image.fromarray(overlay).save(buf, format="PNG")
     return "data:image/png;base64," + base64.b64encode(buf.getvalue()).decode()
+
 
 # ── load model ─────────────────────────────────────────────────────────────
 device = torch.device("cpu")
@@ -100,49 +100,58 @@ grad_cam = None
 try:
     model = RetinalClassifier().to(device)
     model_path = os.path.join(os.path.dirname(__file__), "../data/best_model.pth")
-    model.load_state_dict(torch.load(model_path, map_location=device))
+    checkpoint = torch.load(model_path, map_location=device)
+    # handle different checkpoint formats
+    if isinstance(checkpoint, dict) and "model_state_dict" in checkpoint:
+        model.load_state_dict(checkpoint["model_state_dict"])
+    elif isinstance(checkpoint, dict) and "state_dict" in checkpoint:
+        model.load_state_dict(checkpoint["state_dict"])
+    else:
+        model.load_state_dict(checkpoint)
     model.eval()
     grad_cam = GradCAM(model)
-    logger.info("Model loaded successfully from %s", model_path)
+    logger.info("Model loaded successfully — %d parameters",
+                sum(p.numel() for p in model.parameters()))
 except Exception:
-    logger.exception("Failed to load model — predictions will be unavailable")
-    
-# ── grade info ─────────────────────────────────────────────────────────────
+    logger.exception("Failed to load model — predictions unavailable")
+
+
+# ── grade metadata ─────────────────────────────────────────────────────────
 GRADES = {
     0: {
         "label": "No DR",
         "full": "No Diabetic Retinopathy",
-        "description": "No signs of diabetic retinopathy detected.",
-        "recommendation": "Continue regular annual eye exams.",
-        "color": "#2ecc71",
+        "description": "No signs of diabetic retinopathy detected in this image.",
+        "recommendation": "Continue routine annual diabetic eye screening. Maintain glycemic and blood pressure control.",
+        "color": "#00875a",
     },
     1: {
-        "label": "Mild DR",
-        "full": "Mild Diabetic Retinopathy",
-        "description": "Microaneurysms only. Early stage damage.",
-        "recommendation": "Schedule follow-up in 12 months.",
-        "color": "#f1c40f",
+        "label": "Mild NPDR",
+        "full": "Mild Non-Proliferative Diabetic Retinopathy",
+        "description": "Microaneurysms only — earliest detectable sign of DR.",
+        "recommendation": "Schedule follow-up within 6 months. Reinforce glycemic control.",
+        "color": "#0066cc",
     },
     2: {
-        "label": "Moderate DR",
-        "full": "Moderate Diabetic Retinopathy",
-        "description": "More than mild but less than severe. Vessel damage progressing.",
-        "recommendation": "Refer to ophthalmologist within 6 months.",
-        "color": "#e67e22",
+        "label": "Moderate NPDR",
+        "full": "Moderate Non-Proliferative Diabetic Retinopathy",
+        "description": "More than mild but less than severe NPDR. Hemorrhages and/or exudates present.",
+        "recommendation": "Refer to ophthalmology within 1–2 months. Consider panretinal photocoagulation if indicated.",
+        "color": "#b45309",
     },
     3: {
-        "label": "Severe DR",
-        "full": "Severe Diabetic Retinopathy",
-        "description": "Extensive damage. High risk of progression to proliferative DR.",
-        "recommendation": "Urgent referral to ophthalmologist.",
-        "color": "#e74c3c",
+        "label": "Severe NPDR",
+        "full": "Severe Non-Proliferative Diabetic Retinopathy",
+        "description": "Extensive hemorrhages, venous beading, or intraretinal microvascular abnormalities.",
+        "recommendation": "Urgent ophthalmology referral within 1 week. High risk of progression to PDR.",
+        "color": "#c0392b",
     },
     4: {
         "label": "Proliferative DR",
         "full": "Proliferative Diabetic Retinopathy",
-        "description": "Most severe stage. Abnormal new vessels growing. High risk of vision loss.",
-        "recommendation": "Immediate ophthalmologist referral required.",
-        "color": "#8e44ad",
+        "description": "Neovascularization present. Risk of vitreous hemorrhage and tractional detachment.",
+        "recommendation": "Emergency ophthalmology referral. Anti-VEGF or panretinal laser treatment required.",
+        "color": "#6d28d9",
     },
 }
 
@@ -171,8 +180,8 @@ _transform = transforms.Compose([
 
 def _preprocess(image_bytes: bytes) -> torch.Tensor:
     img = Image.open(io.BytesIO(image_bytes)).convert("RGB")
-    img = _apply_clahe(np.array(img))
-    return _transform(Image.fromarray(img)).unsqueeze(0)
+    img_np = _apply_clahe(np.array(img))
+    return _transform(Image.fromarray(img_np)).unsqueeze(0)
 
 
 # ── routes ─────────────────────────────────────────────────────────────────
@@ -181,37 +190,70 @@ def index():
     return render_template("index.html")
 
 
-@app.route("/predict", methods=["POST"])
-def predict():
-    # ── model availability ──────────────────────────────────────────────────
-    if model is None:
-        return jsonify({"error": "Model is not available. Please try again later."}), 503
+@app.route("/health")
+def health():
+    return jsonify({
+        "status": "ok",
+        "model_loaded": model is not None,
+        "grad_cam_ready": grad_cam is not None,
+    })
 
-    # ── file presence ───────────────────────────────────────────────────────
+
+@app.route("/debug", methods=["POST"])
+def debug():
+    """Debug endpoint — returns raw logits and probabilities for diagnosis."""
+    if model is None:
+        return jsonify({"error": "model not loaded"}), 503
     if "file" not in request.files:
-        return jsonify({"error": "No file uploaded."}), 400
+        return jsonify({"error": "no file"}), 400
 
     file = request.files["file"]
+    image_bytes = file.read()
 
+    try:
+        tensor = _preprocess(image_bytes).to(device)
+        with torch.no_grad():
+            outputs = model(tensor)
+            probs = torch.softmax(outputs, dim=1)[0].numpy()
+
+        return jsonify({
+            "raw_logits": outputs[0].numpy().tolist(),
+            "probabilities": probs.tolist(),
+            "predicted_grade": int(np.argmax(probs)),
+            "predicted_label": GRADES[int(np.argmax(probs))]["label"],
+            "tensor_shape": list(tensor.shape),
+            "tensor_mean": float(tensor.mean()),
+            "tensor_std": float(tensor.std()),
+        })
+    except Exception as e:
+        logger.exception("Debug endpoint error")
+        return jsonify({"error": str(e)}), 500
+
+
+@app.route("/predict", methods=["POST"])
+def predict():
+    # model check
+    if model is None:
+        return jsonify({"error": "Model not available. Please try again later."}), 503
+
+    # file checks
+    if "file" not in request.files:
+        return jsonify({"error": "No file uploaded."}), 400
+    file = request.files["file"]
     if file.filename == "":
         return jsonify({"error": "No file selected."}), 400
-
-    # ── file type ───────────────────────────────────────────────────────────
     if not _allowed_file(file.filename):
-        return jsonify({
-            "error": f"Invalid file type. Please upload a PNG or JPG image."
-        }), 400
+        return jsonify({"error": "Invalid file type. Please upload PNG or JPG."}), 400
 
-    # ── file size ───────────────────────────────────────────────────────────
     image_bytes = file.read()
     size_mb = len(image_bytes) / (1024 * 1024)
     if size_mb > MAX_FILE_SIZE_MB:
         return jsonify({
-            "error": f"File too large ({size_mb:.1f} MB). Maximum allowed size is {MAX_FILE_SIZE_MB} MB."
+            "error": f"File too large ({size_mb:.1f} MB). Max {MAX_FILE_SIZE_MB} MB."
         }), 400
 
-    # ── inference ───────────────────────────────────────────────────────────
     try:
+        # ── inference ──────────────────────────────────────────────────────
         tensor = _preprocess(image_bytes).to(device)
 
         with torch.no_grad():
@@ -220,37 +262,46 @@ def predict():
             grade = int(np.argmax(probs))
             confidence = float(probs[grade])
 
-        low_confidence = confidence < LOW_CONFIDENCE_THRESHOLD
         grade_info = GRADES[grade]
+        low_confidence = confidence < LOW_CONFIDENCE_THRESHOLD
 
-        response = {
-            "grade": grade,
-            "label": grade_info["label"],
-            "full": grade_info["full"],
-            "description": grade_info["description"],
-            "recommendation": grade_info["recommendation"],
-            "color": grade_info["color"],
-            "confidence": round(confidence * 100, 1),
-            "low_confidence": low_confidence,
+        logger.info("Prediction: grade=%d (%s) confidence=%.2f%%",
+                    grade, grade_info["label"], confidence * 100)
+
+        # ── Grad-CAM ───────────────────────────────────────────────────────
+        cam_image_b64 = None
+        if grad_cam is not None:
+            try:
+                tensor_grad = _preprocess(image_bytes).to(device)
+                cam = grad_cam.generate(tensor_grad, grade)
+                cam_image_b64 = _overlay_heatmap(image_bytes, cam)
+                logger.info("Grad-CAM generated successfully")
+            except Exception:
+                logger.warning("Grad-CAM generation failed — skipping")
+
+        # ── response ───────────────────────────────────────────────────────
+        return jsonify({
+            "grade":           grade,
+            "label":           grade_info["label"],
+            "full":            grade_info["full"],
+            "description":     grade_info["description"],
+            "recommendation":  grade_info["recommendation"],
+            "color":           grade_info["color"],
+            "confidence":      round(confidence * 100, 1),
+            "probabilities":   [round(float(probs[i]), 4) for i in range(5)],
+            "all_scores":      {GRADES[i]["label"]: round(float(probs[i]) * 100, 1) for i in range(5)},
+            "cam_image":       cam_image_b64,
+            "low_confidence":  low_confidence,
             "low_confidence_warning": (
-                "⚠️ Confidence is low — this result may be unreliable. "
+                "⚠ Low confidence — result may be unreliable. "
                 "Please consult a qualified ophthalmologist."
                 if low_confidence else None
             ),
-            "all_scores": {
-                GRADES[i]["label"]: round(float(probs[i]) * 100, 1)
-                for i in range(5)
-            },
-        }
-        logger.info(
-            "Prediction: grade=%d confidence=%.2f low_conf=%s",
-            grade, confidence, low_confidence,
-        )
-        return jsonify(response)
+        })
 
     except Exception:
-        logger.exception("Prediction failed for uploaded file")
-        return jsonify({"error": "An error occurred during analysis. Please try again."}), 500
+        logger.exception("Prediction failed")
+        return jsonify({"error": "Analysis failed. Please try again."}), 500
 
 
 if __name__ == "__main__":
