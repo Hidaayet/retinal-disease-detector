@@ -141,6 +141,13 @@ def main(args):
             "%5d %8.4f %7.4f %7.4f %8.4f %7.4f %7.4f%s",
             epoch, t_loss, t_acc, t_kappa, v_loss, v_acc, v_kappa, flag,
         )
+        
+        if isinstance(checkpoint, dict) and "model_state_dict" in checkpoint:
+            model.load_state_dict(checkpoint["model_state_dict"])
+        elif isinstance(checkpoint, dict) and "state_dict" in checkpoint:
+            model.load_state_dict(checkpoint["state_dict"])
+        else:
+            model.load_state_dict(checkpoint)
 
         if v_kappa > best_kappa:
             best_kappa = v_kappa
