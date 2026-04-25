@@ -71,6 +71,8 @@ retinal-disease-detector/
 ├── Dockerfile
 ├── requirements.txt
 └── README.md
+> Training code is in `notebooks/02_model_training.ipynb`. The model weights (`best_model.pth`) are stored separately and loaded at runtime.
+
 ```
 ## Results
 
