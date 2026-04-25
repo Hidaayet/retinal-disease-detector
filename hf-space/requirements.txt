@@ -5,3 +5,4 @@ timm==1.0.3
 opencv-python-headless==4.8.1.78
 pillow==10.1.0
 numpy==1.26.4
+gunicorn==21.2.0

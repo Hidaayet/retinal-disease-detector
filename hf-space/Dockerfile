@@ -26,4 +26,4 @@ COPY data/best_model.pth ./data/best_model.pth
 EXPOSE 7860
 
 # run the app
-CMD ["python", "app/app.py"]
+CMD ["gunicorn", "--bind", "0.0.0.0:7860", "--workers", "1", "--timeout", "120", "app.app:app"]
