@@ -1,3 +1,10 @@
+
+> ⚠️ **Medical Disclaimer**
+> This tool is a research project and is **not** a medical device. It has not been
+> validated for clinical use and must not be used to diagnose, treat, or make
+> decisions about any medical condition. Always consult a qualified ophthalmologist.
+
+---
 # Retinal Disease Detector
 
 A deep learning web application that detects diabetic retinopathy severity
