@@ -1,7 +1,8 @@
 import io
 import logging
 import os
-
+import base64
+import torch.nn.functional as F
 import cv2
 import numpy as np
 import timm
@@ -44,20 +45,68 @@ class RetinalClassifier(nn.Module):
     def forward(self, x):
         return self.classifier(self.backbone(x))
 
+# ── Grad-CAM ───────────────────────────────────────────────────────────────
+class GradCAM:
+    """Gradient-weighted Class Activation Mapping for EfficientNet-B3."""
+
+    def __init__(self, model):
+        self.model = model
+        self.activations = None
+        self.gradients = None
+        # hook onto the last conv layer before global pooling
+        target = model.backbone.conv_head
+        target.register_forward_hook(self._save_activation)
+        target.register_full_backward_hook(self._save_gradient)
+
+    def _save_activation(self, module, input, output):
+        self.activations = output.detach()
+
+    def _save_gradient(self, module, grad_input, grad_output):
+        self.gradients = grad_output[0].detach()
+
+    def generate(self, input_tensor: torch.Tensor, class_idx: int) -> np.ndarray:
+        self.model.zero_grad()
+        output = self.model(input_tensor)
+        one_hot = torch.zeros_like(output)
+        one_hot[0][class_idx] = 1.0
+        output.backward(gradient=one_hot)
+
+        weights = self.gradients.mean(dim=(2, 3), keepdim=True)
+        cam = F.relu((weights * self.activations).sum(dim=1, keepdim=True))
+        cam = F.interpolate(cam, size=(300, 300), mode="bilinear", align_corners=False)
+        cam = cam.squeeze().numpy()
+        cam = (cam - cam.min()) / (cam.max() - cam.min() + 1e-8)
+        return cam
+
+
+def _overlay_heatmap(image_bytes: bytes, cam: np.ndarray) -> str:
+    """Blend Grad-CAM heatmap onto the original image, return as base64 PNG."""
+    img = Image.open(io.BytesIO(image_bytes)).convert("RGB").resize((300, 300))
+    img_np = np.array(img)
+
+    heatmap = cv2.applyColorMap(np.uint8(255 * cam), cv2.COLORMAP_JET)
+    heatmap = cv2.cvtColor(heatmap, cv2.COLOR_BGR2RGB)
+    overlay = (0.55 * img_np + 0.45 * heatmap).clip(0, 255).astype(np.uint8)
+
+    buf = io.BytesIO()
+    Image.fromarray(overlay).save(buf, format="PNG")
+    return "data:image/png;base64," + base64.b64encode(buf.getvalue()).decode()
 
 # ── load model ─────────────────────────────────────────────────────────────
 device = torch.device("cpu")
 model = None
+grad_cam = None
 
 try:
     model = RetinalClassifier().to(device)
     model_path = os.path.join(os.path.dirname(__file__), "../data/best_model.pth")
     model.load_state_dict(torch.load(model_path, map_location=device))
     model.eval()
+    grad_cam = GradCAM(model)
     logger.info("Model loaded successfully from %s", model_path)
 except Exception:
     logger.exception("Failed to load model — predictions will be unavailable")
-
+    
 # ── grade info ─────────────────────────────────────────────────────────────
 GRADES = {
     0: {
