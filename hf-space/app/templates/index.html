@@ -734,7 +734,14 @@ function showError(msg) {
 // ── Display result ────────────────────────────────────────────────────────
 function displayResult(data) {
   const grade = typeof data.grade === 'number' ? data.grade : 0;
-  const probs = Array.isArray(data.probabilities) ? data.probabilities : [0,0,0,0,0];
+  const scores = data.all_scores || {};
+  const probs = [
+      (scores['No DR'] || 0) / 100,
+      (scores['Mild DR'] || 0) / 100,
+      (scores['Moderate DR'] || 0) / 100,
+      (scores['Severe DR'] || 0) / 100,
+      (scores['Proliferative DR'] || 0) / 100
+  ];
   const g     = GRADES[grade];
 
   // switch panels
