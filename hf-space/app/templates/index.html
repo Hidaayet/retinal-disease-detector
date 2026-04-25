@@ -511,7 +511,6 @@ body {
       <strong>not</strong> a medical device. Results must not be used for clinical diagnosis 
       or treatment decisions. Always consult a qualified ophthalmologist.
     </div>
-
     <div class="perf-pills">
       <div class="perf-pill blue">QWK 0.9053</div>
       <div class="perf-pill green">Acc 83.6%</div>
@@ -651,6 +650,27 @@ body {
             <span class="card-tag" id="result-timestamp"></span>
           </div>
           <div class="card-body">
+
+            <!-- grad-cam -->
+<div class="card" id="cam-card" style="margin-top:1.25rem;display:none">
+  <div class="card-header">
+    <span class="card-title">Attention Map</span>
+    <span class="card-tag">Grad-CAM · what the model looked at</span>
+  </div>
+  <div class="card-body" style="text-align:center">
+    <img id="cam-image" src="" alt="Grad-CAM heatmap"
+         style="width:100%;max-width:300px;border-radius:4px;border:1px solid var(--rule)">
+    <p style="font-size:0.72rem;color:var(--ink-3);margin-top:0.6rem;font-weight:300">
+      Red/yellow areas show regions most influential in the prediction.
+      Blue areas had little influence.
+    </p>
+  </div>
+</div>
+
+<!-- low confidence warning -->
+<div id="low-conf-warning" style="display:none;margin-top:0.75rem;padding:0.75rem 1rem;
+     background:#fef2f2;border:1px solid #fca5a5;border-radius:3px;
+     font-size:0.78rem;color:#c0392b"></div>
 
             <!-- grade banner -->
             <div class="grade-banner" id="grade-banner">
@@ -829,8 +849,8 @@ async function runInference() {
 }
 
 function displayResult(data) {
-  const grade = data.grade ?? data.prediction ?? 0;
-  const conf = data.confidence ?? data.probabilities ?? [0.8,0.1,0.05,0.03,0.02];
+  const grade = data.grade ?? 0;
+  const probs = data.probabilities ?? [0, 0, 0, 0, 0];
   const g = GRADES[grade];
 
   document.getElementById('placeholder-panel').style.display = 'none';
@@ -845,6 +865,54 @@ function displayResult(data) {
   document.getElementById('grade-label').textContent = g.label;
   document.getElementById('grade-label').style.color = g.color;
   document.getElementById('grade-desc').textContent = g.desc;
+
+  // confidence bars
+  const container = document.getElementById('conf-bars');
+  container.innerHTML = '';
+  probs.forEach((p, i) => {
+    const pct = Math.round(p * 100);
+    container.innerHTML += `
+      <div class="conf-row">
+        <div class="conf-label">Grade ${i} — ${GRADES[i].label.split(' ')[0]}</div>
+        <div class="conf-bar-bg">
+          <div class="conf-bar-fill" style="width:0%;background:${GRADES[i].barColor}"
+               data-width="${pct}"></div>
+        </div>
+        <div class="conf-pct">${pct}%</div>
+      </div>`;
+  });
+  setTimeout(() => {
+    container.querySelectorAll('.conf-bar-fill').forEach(bar => {
+      bar.style.width = bar.dataset.width + '%';
+    });
+  }, 50);
+
+  // recommendation
+  const rec = document.getElementById('rec-block');
+  rec.style.background = g.bg;
+  rec.style.borderColor = g.color;
+  rec.style.color = g.color;
+  document.getElementById('rec-text').textContent = ' ' + g.rec;
+
+  // grad-cam
+  if (data.cam_image) {
+    document.getElementById('cam-image').src = data.cam_image;
+    document.getElementById('cam-card').style.display = 'block';
+  }
+
+  // low confidence warning
+  const warn = document.getElementById('low-conf-warning');
+  if (data.low_confidence_warning) {
+    warn.textContent = data.low_confidence_warning;
+    warn.style.display = 'block';
+  } else {
+    warn.style.display = 'none';
+  }
+
+  // timestamp
+  document.getElementById('result-timestamp').textContent =
+    new Date().toLocaleTimeString('en-GB', {hour:'2-digit', minute:'2-digit'});
+}
 
   // confidence bars
   const container = document.getElementById('conf-bars');
