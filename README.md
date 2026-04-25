@@ -58,21 +58,18 @@ for each class — in under 2 seconds.
 ## Project structure
 ```
 retinal-disease-detector/
-├── model/
-│   ├── train.py
-│   ├── dataset.py
-│   └── evaluate.py
 ├── app/
 │   ├── app.py
 │   ├── static/
 │   └── templates/
+│       └── index.html
 ├── notebooks/
 │   ├── 01_data_exploration.ipynb
 │   └── 02_model_training.ipynb
-├── data/
-│   └── (download instructions in docs/SPEC.md)
 ├── docs/
 │   └── SPEC.md
+├── Dockerfile
+├── requirements.txt
 └── README.md
 ```
 ## Results
