@@ -8,18 +8,18 @@ from PIL import Image
 from torchvision import transforms
 import io
 import os
+import logging
+
+logging.basicConfig(level=logging.INFO)
+logger = logging.getLogger(__name__)
 
 app = Flask(__name__)
 
-# ── max upload size: 10 MB ────────────────────────────────────────────────
-app.config['MAX_CONTENT_LENGTH'] = 10 * 1024 * 1024
-
+# ── constants ─────────────────────────────────────────────────────────────
+MAX_FILE_SIZE = 5 * 1024 * 1024  # 5 MB
 ALLOWED_EXTENSIONS = {'png', 'jpg', 'jpeg'}
 
-def allowed_file(filename):
-    return '.' in filename and filename.rsplit('.', 1)[1].lower() in ALLOWED_EXTENSIONS
-
-# ── model definition ──────────────────────────────────────────────────────
+# ── model definition ───────────────────────────────────────────────────────
 class RetinalClassifier(nn.Module):
     def __init__(self, num_classes=5, dropout=0.3):
         super().__init__()
@@ -36,23 +36,20 @@ class RetinalClassifier(nn.Module):
     def forward(self, x):
         return self.classifier(self.backbone(x))
 
-# ── load model safely ─────────────────────────────────────────────────────
+# ── load model ─────────────────────────────────────────────────────────────
 device = torch.device('cpu')
 model = None
 
 try:
     model = RetinalClassifier().to(device)
-    model.load_state_dict(torch.load(
-        os.path.join(os.path.dirname(__file__), '../data/best_model.pth'),
-        map_location=device
-    ))
+    model_path = os.path.join(os.path.dirname(__file__), '../data/best_model.pth')
+    model.load_state_dict(torch.load(model_path, map_location=device))
     model.eval()
-    print("Model loaded successfully")
+    logger.info("Model loaded successfully")
 except Exception as e:
-    print(f"ERROR: Could not load model — {e}")
-    model = None
+    logger.error(f"Failed to load model: {e}")
 
-# ── grade info ────────────────────────────────────────────────────────────
+# ── grade info ─────────────────────────────────────────────────────────────
 GRADES = {
     0: {
         'label': 'No DR',
@@ -91,7 +88,13 @@ GRADES = {
     }
 }
 
-# ── preprocessing ─────────────────────────────────────────────────────────
+# ── helpers ────────────────────────────────────────────────────────────────
+def allowed_file(filename):
+    return (
+        '.' in filename and
+        filename.rsplit('.', 1)[1].lower() in ALLOWED_EXTENSIONS
+    )
+
 def apply_clahe(img):
     lab = cv2.cvtColor(img, cv2.COLOR_RGB2LAB)
     l, a, b = cv2.split(lab)
@@ -114,18 +117,22 @@ def preprocess(image_bytes):
     img = Image.fromarray(img)
     return transform(img).unsqueeze(0)
 
-# ── routes ────────────────────────────────────────────────────────────────
+# ── routes ─────────────────────────────────────────────────────────────────
+@app.route('/health')
+def health():
+    if model is None:
+        return jsonify({'status': 'error', 'message': 'Model not loaded'}), 503
+    return jsonify({'status': 'ok'})
+
 @app.route('/')
 def index():
     return render_template('index.html')
 
 @app.route('/predict', methods=['POST'])
 def predict():
-    # check model is loaded
     if model is None:
-        return jsonify({'error': 'Model is not available. Please try again later.'}), 503
+        return jsonify({'error': 'Model is not available'}), 503
 
-    # check file presence
     if 'file' not in request.files:
         return jsonify({'error': 'No file uploaded'}), 400
 
@@ -134,40 +141,26 @@ def predict():
     if file.filename == '':
         return jsonify({'error': 'No file selected'}), 400
 
-    # check file extension
     if not allowed_file(file.filename):
-        return jsonify({'error': 'Invalid file type. Please upload a PNG or JPG image.'}), 400
+        return jsonify({'error': 'Invalid file type. Please upload a JPG or PNG image.'}), 400
+
+    image_bytes = file.read()
+
+    if len(image_bytes) > MAX_FILE_SIZE:
+        return jsonify({'error': 'File too large. Maximum size is 5MB.'}), 400
 
     try:
-        image_bytes = file.read()
-
-        # check it's actually a valid image
-        try:
-            Image.open(io.BytesIO(image_bytes)).verify()
-        except Exception:
-            return jsonify({'error': 'Uploaded file is not a valid image.'}), 400
-
-        # preprocess and predict
         tensor = preprocess(image_bytes).to(device)
 
-        with torch.no_grad():
+        with torch.inference_mode():
             outputs = model(tensor)
             probs = torch.softmax(outputs, dim=1)[0].numpy()
 
         grade = int(np.argmax(probs))
         confidence = float(probs[grade])
-
-        # low confidence warning
-        low_confidence_warning = None
-        if confidence < 0.5:
-            low_confidence_warning = (
-                f"Low confidence ({round(confidence * 100, 1)}%). "
-                "The model is uncertain about this image. "
-                "It may not be a valid fundus photograph, or the image quality may be poor."
-            )
-
         grade_info = GRADES[grade]
-        response = {
+
+        return jsonify({
             'grade': grade,
             'label': grade_info['label'],
             'full': grade_info['full'],
@@ -178,15 +171,12 @@ def predict():
             'all_scores': {
                 GRADES[i]['label']: round(float(probs[i]) * 100, 1)
                 for i in range(5)
-            },
-            'low_confidence_warning': low_confidence_warning
-        }
-        return jsonify(response)
+            }
+        })
 
     except Exception as e:
-        # log the real error server-side, never expose it to the client
-        print(f"Prediction error: {e}")
-        return jsonify({'error': 'An error occurred during analysis. Please try again.'}), 500
+        logger.error(f"Prediction error: {e}")
+        return jsonify({'error': 'Failed to process image. Please try a different file.'}), 500
 
 if __name__ == '__main__':
     app.run(host='0.0.0.0', port=7860)
