@@ -1,14 +1,6 @@
-<<<<<<< HEAD
---extra-index-url https://download.pytorch.org/whl/cpu
-
-flask==3.0.0
-torch==2.1.0+cpu
-torchvision==0.16.0+cpu
-=======
 flask==3.0.0
 torch==2.1.0
 torchvision==0.16.0
->>>>>>> 78c9c57364f554fd517e0f31f164d365ac31342e
 timm==1.0.3
 opencv-python-headless==4.8.1.78
 pillow==10.1.0
