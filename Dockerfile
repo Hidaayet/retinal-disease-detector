@@ -25,5 +25,9 @@ COPY data/best_model.pth ./data/best_model.pth
 # expose port
 EXPOSE 7860
 
+<<<<<<< HEAD
 # run with gunicorn instead of Flask dev server
+=======
+# run the app
+>>>>>>> 78c9c57364f554fd517e0f31f164d365ac31342e
 CMD ["gunicorn", "--bind", "0.0.0.0:7860", "--workers", "1", "--timeout", "120", "app.app:app"]

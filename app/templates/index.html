@@ -1,6 +1,7 @@
 <!DOCTYPE html>
 <html lang="en">
 <head>
+<<<<<<< HEAD
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Retinal Disease Detector</title>
@@ -375,3 +376,820 @@
 
 </body>
 </html>
+=======
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>RetinalAI — Diabetic Retinopathy Detection</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=IBM+Plex+Sans:ital,wght@0,300;0,400;0,500;0,600;1,300&family=IBM+Plex+Mono:wght@400;500&display=swap" rel="stylesheet">
+<style>
+:root {
+  --ink:       #0d1b2a;
+  --ink-2:     #1c3144;
+  --ink-3:     #2d4a63;
+  --mist:      #e8eff7;
+  --mist-2:    #f4f7fb;
+  --rule:      #ccd8e8;
+  --rule-2:    #dde6f0;
+  --sky:       #0066cc;
+  --sky-2:     #0052a3;
+  --sky-light: #e6f0ff;
+  --green:     #00875a;
+  --green-bg:  #e3fcef;
+  --amber:     #b45309;
+  --amber-bg:  #fffbeb;
+  --red:       #c0392b;
+  --red-bg:    #fef2f2;
+  --purple:    #6d28d9;
+  --purple-bg: #f5f3ff;
+  --mono:      'IBM Plex Mono', monospace;
+  --sans:      'IBM Plex Sans', sans-serif;
+}
+*, *::before, *::after { margin:0; padding:0; box-sizing:border-box; }
+html { font-size:15px; scroll-behavior:smooth; }
+body {
+  font-family: var(--sans);
+  background: var(--mist-2);
+  color: var(--ink);
+  min-height: 100vh;
+  -webkit-font-smoothing: antialiased;
+}
+
+/* ── TOPBAR ──────────────────────────────────────────── */
+.topbar {
+  background: var(--ink);
+  padding: 0 2rem;
+  height: 48px;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  position: sticky;
+  top: 0;
+  z-index: 100;
+}
+.topbar-brand { display:flex; align-items:center; gap:0.75rem; }
+.brand-mark {
+  width:28px; height:28px; border-radius:4px;
+  background:var(--sky); display:flex;
+  align-items:center; justify-content:center;
+}
+.brand-mark svg { width:16px; height:16px; fill:white; }
+.brand-name { font-size:0.9rem; font-weight:600; color:white; letter-spacing:0.02em; }
+.brand-name span { color:#64a8e8; font-weight:300; }
+.topbar-meta { display:flex; align-items:center; gap:1.5rem; }
+.topbar-badge {
+  font-family:var(--mono); font-size:0.65rem;
+  padding:0.2rem 0.6rem;
+  border:1px solid rgba(255,255,255,0.15);
+  border-radius:2px; color:rgba(255,255,255,0.5);
+  letter-spacing:0.08em; text-transform:uppercase;
+}
+.topbar-model { font-family:var(--mono); font-size:0.7rem; color:#64a8e8; }
+
+/* ── LAYOUT ──────────────────────────────────────────── */
+.shell { max-width:1100px; margin:0 auto; padding:2rem 2rem 4rem; }
+
+/* ── PAGE HEADER ─────────────────────────────────────── */
+.page-header {
+  margin-bottom:2rem;
+  padding-bottom:1.25rem;
+  border-bottom:1px solid var(--rule);
+}
+.page-header-top {
+  display:flex; justify-content:space-between;
+  align-items:flex-start; gap:1rem;
+  margin-bottom:0.75rem;
+}
+.page-header-left h1 {
+  font-size:1.4rem; font-weight:600;
+  color:var(--ink); letter-spacing:-0.02em;
+}
+.page-header-left p {
+  font-size:0.82rem; color:var(--ink-3);
+  margin-top:0.25rem; font-weight:300;
+}
+.perf-pills { display:flex; gap:0.5rem; flex-shrink:0; }
+.perf-pill {
+  font-family:var(--mono); font-size:0.7rem;
+  padding:0.3rem 0.75rem; border-radius:2px; border:1px solid;
+}
+.perf-pill.blue { background:var(--sky-light); border-color:#b3d0f5; color:var(--sky-2); }
+.perf-pill.green { background:var(--green-bg); border-color:#a3e6c8; color:var(--green); }
+.medical-disclaimer {
+  background:#fffbeb; border:1px solid #f0d070;
+  border-radius:3px; padding:0.7rem 1rem;
+  font-size:0.75rem; color:#78350f; line-height:1.6;
+  display:flex; gap:0.5rem; align-items:flex-start;
+}
+
+/* ── GRID ────────────────────────────────────────────── */
+.grid-2 { display:grid; grid-template-columns:1fr 1fr; gap:1.25rem; }
+.grid-3 { display:grid; grid-template-columns:repeat(3,1fr); gap:1rem; margin-top:1.25rem; }
+
+/* ── CARD ────────────────────────────────────────────── */
+.card { background:white; border:1px solid var(--rule); border-radius:6px; overflow:hidden; }
+.card-header {
+  padding:0.9rem 1.25rem;
+  border-bottom:1px solid var(--rule-2);
+  display:flex; align-items:center;
+  justify-content:space-between;
+  background:var(--mist-2);
+}
+.card-title {
+  font-size:0.78rem; font-weight:600;
+  text-transform:uppercase; letter-spacing:0.08em; color:var(--ink-2);
+}
+.card-tag { font-family:var(--mono); font-size:0.65rem; color:var(--ink-3); }
+.card-body { padding:1.25rem; }
+
+/* ── UPLOAD ──────────────────────────────────────────── */
+.upload-zone {
+  border:1.5px dashed var(--rule); border-radius:4px;
+  padding:2.5rem 1.5rem; text-align:center;
+  cursor:pointer; transition:all 0.2s;
+  background:var(--mist-2); position:relative;
+}
+.upload-zone:hover, .upload-zone.drag-over {
+  border-color:var(--sky); background:var(--sky-light);
+}
+.upload-zone input {
+  position:absolute; inset:0; opacity:0;
+  cursor:pointer; width:100%; height:100%;
+}
+.upload-icon {
+  width:40px; height:40px; margin:0 auto 0.75rem;
+  background:var(--sky-light); border-radius:50%;
+  display:flex; align-items:center; justify-content:center;
+}
+.upload-icon svg { width:20px; height:20px; stroke:var(--sky); fill:none; stroke-width:1.5; }
+.upload-title { font-size:0.88rem; font-weight:500; color:var(--ink); margin-bottom:0.25rem; }
+.upload-sub { font-size:0.75rem; color:var(--ink-3); font-weight:300; }
+.upload-formats { display:flex; justify-content:center; gap:0.4rem; margin-top:0.75rem; }
+.fmt-tag {
+  font-family:var(--mono); font-size:0.6rem;
+  padding:0.15rem 0.4rem; background:white;
+  border:1px solid var(--rule); border-radius:2px;
+  color:var(--ink-3); text-transform:uppercase;
+}
+.img-preview {
+  display:none; width:100%; aspect-ratio:1;
+  border-radius:4px; object-fit:cover; border:1px solid var(--rule);
+}
+
+/* ── FORM ────────────────────────────────────────────── */
+.field-row { display:grid; grid-template-columns:1fr 1fr; gap:0.75rem; margin-bottom:0.75rem; }
+.field { display:flex; flex-direction:column; gap:0.3rem; }
+.field label {
+  font-size:0.7rem; font-weight:500;
+  text-transform:uppercase; letter-spacing:0.07em; color:var(--ink-3);
+}
+.field select, .field input {
+  font-family:var(--sans); font-size:0.82rem;
+  padding:0.55rem 0.75rem; border:1px solid var(--rule);
+  border-radius:3px; background:white; color:var(--ink);
+  transition:border-color 0.15s; appearance:none; -webkit-appearance:none;
+  background-image:url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='10' height='6' viewBox='0 0 10 6'%3E%3Cpath d='M1 1l4 4 4-4' stroke='%232d4a63' stroke-width='1.5' fill='none' stroke-linecap='round'/%3E%3C/svg%3E");
+  background-repeat:no-repeat; background-position:right 0.75rem center;
+}
+.field select:focus, .field input:focus {
+  outline:none; border-color:var(--sky);
+  box-shadow:0 0 0 3px rgba(0,102,204,0.08);
+}
+
+/* ── BUTTON ──────────────────────────────────────────── */
+.btn-run {
+  width:100%; padding:0.8rem;
+  background:var(--sky); color:white;
+  font-family:var(--sans); font-size:0.85rem;
+  font-weight:600; letter-spacing:0.03em;
+  border:none; border-radius:3px; cursor:pointer;
+  margin-top:0.75rem; transition:background 0.15s;
+  display:flex; align-items:center; justify-content:center; gap:0.5rem;
+}
+.btn-run:hover { background:var(--sky-2); }
+.btn-run:disabled { background:var(--ink-3); cursor:not-allowed; }
+.btn-run svg { width:16px; height:16px; fill:none; stroke:white; stroke-width:2; stroke-linecap:round; }
+
+/* ── LOADING ─────────────────────────────────────────── */
+.loading-overlay {
+  display:none; position:absolute; inset:0;
+  background:rgba(255,255,255,0.88);
+  border-radius:6px; align-items:center;
+  justify-content:center; flex-direction:column;
+  gap:0.75rem; z-index:10;
+}
+.loading-overlay.active { display:flex; }
+.spinner {
+  width:28px; height:28px;
+  border:2px solid var(--rule);
+  border-top-color:var(--sky);
+  border-radius:50%;
+  animation:spin 0.7s linear infinite;
+}
+@keyframes spin { to { transform:rotate(360deg); } }
+.loading-text { font-size:0.78rem; color:var(--ink-3); font-family:var(--mono); }
+.right-panel { position:relative; }
+
+/* ── RESULT ──────────────────────────────────────────── */
+#result-panel { display:none; }
+
+.grade-banner {
+  padding:1.25rem; border-radius:4px;
+  margin-bottom:1.25rem; display:flex;
+  align-items:center; gap:1rem; border:1px solid;
+}
+.grade-num {
+  font-family:var(--mono); font-size:2.5rem;
+  font-weight:500; line-height:1;
+  min-width:2.5rem; text-align:center;
+}
+.grade-label { font-size:1rem; font-weight:600; margin-bottom:0.2rem; }
+.grade-desc { font-size:0.78rem; font-weight:300; line-height:1.5; }
+
+.conf-section-title {
+  font-size:0.7rem; text-transform:uppercase;
+  letter-spacing:0.08em; color:var(--ink-2);
+  font-weight:600; margin-bottom:0.75rem;
+}
+.conf-row { display:flex; align-items:center; gap:0.75rem; margin-bottom:0.6rem; font-size:0.78rem; }
+.conf-label { width:130px; flex-shrink:0; color:var(--ink-2); font-weight:400; }
+.conf-bar-bg { flex:1; height:6px; background:var(--rule-2); border-radius:3px; overflow:hidden; }
+.conf-bar-fill { height:100%; border-radius:3px; transition:width 0.8s cubic-bezier(.16,1,.3,1); }
+.conf-pct { width:40px; text-align:right; font-family:var(--mono); font-size:0.72rem; color:var(--ink-3); }
+
+.rec-block {
+  padding:0.9rem 1rem; border-radius:3px;
+  font-size:0.8rem; line-height:1.7;
+  border-left:3px solid; margin-top:1rem;
+}
+
+.cam-card { margin-top:1rem; display:none; }
+.cam-img {
+  width:100%; max-width:300px;
+  border-radius:4px; border:1px solid var(--rule);
+  display:block; margin:0 auto;
+}
+.cam-caption {
+  font-size:0.72rem; color:var(--ink-3);
+  margin-top:0.6rem; font-weight:300;
+  text-align:center; line-height:1.5;
+}
+
+.low-conf-warning {
+  display:none; margin-top:0.75rem;
+  padding:0.75rem 1rem;
+  background:var(--red-bg); border:1px solid #fca5a5;
+  border-radius:3px; font-size:0.78rem; color:var(--red);
+}
+
+.result-disclaimer {
+  margin-top:1.25rem; padding:0.75rem 1rem;
+  background:#fffbeb; border:1px solid #f0d070;
+  border-radius:3px; font-size:0.73rem; color:#78350f;
+  line-height:1.6; display:flex; gap:0.6rem;
+}
+.result-disclaimer-icon { font-size:0.85rem; flex-shrink:0; }
+
+/* ── STATS ───────────────────────────────────────────── */
+.stat-card {
+  background:white; border:1px solid var(--rule);
+  border-radius:4px; padding:1rem; text-align:center;
+}
+.stat-val {
+  font-family:var(--mono); font-size:1.4rem;
+  font-weight:500; color:var(--ink); line-height:1; margin-bottom:0.3rem;
+}
+.stat-val.blue { color:var(--sky); }
+.stat-val.green { color:var(--green); }
+.stat-lbl {
+  font-size:0.67rem; text-transform:uppercase;
+  letter-spacing:0.08em; color:var(--ink-3); font-weight:500;
+}
+
+/* ── ERROR ───────────────────────────────────────────── */
+.error-toast {
+  display:none; margin-top:0.75rem;
+  padding:0.9rem 1rem;
+  background:var(--red-bg); border:1px solid #fca5a5;
+  border-radius:3px; font-size:0.82rem; color:var(--red);
+  font-family:var(--mono);
+}
+
+/* ── REFERENCE TABLE ─────────────────────────────────── */
+.ref-table { width:100%; border-collapse:collapse; font-size:0.78rem; }
+.ref-table thead tr { background:var(--mist-2); border-bottom:1px solid var(--rule); }
+.ref-table th {
+  padding:0.65rem 1.25rem; text-align:left;
+  font-weight:600; text-transform:uppercase;
+  font-size:0.65rem; letter-spacing:0.07em; color:var(--ink-3);
+}
+.ref-table tbody tr { border-bottom:1px solid var(--rule-2); }
+.ref-table tbody tr:last-child { border-bottom:none; }
+.ref-table td { padding:0.75rem 1.25rem; }
+.grade-badge {
+  font-family:var(--mono); padding:0.15rem 0.5rem;
+  border-radius:2px; font-size:0.72rem;
+}
+
+/* ── RESPONSIVE ──────────────────────────────────────── */
+@media(max-width:768px) {
+  .grid-2 { grid-template-columns:1fr; }
+  .grid-3 { grid-template-columns:1fr 1fr; }
+  .page-header-top { flex-direction:column; }
+}
+</style>
+</head>
+<body>
+
+<!-- TOPBAR -->
+<div class="topbar">
+  <div class="topbar-brand">
+    <div class="brand-mark">
+      <svg viewBox="0 0 24 24">
+        <circle cx="12" cy="12" r="4"/>
+        <circle cx="12" cy="12" r="9" fill="none" stroke="white" stroke-width="1.5"/>
+        <line x1="12" y1="3" x2="12" y2="6" stroke="white" stroke-width="1.5"/>
+        <line x1="12" y1="18" x2="12" y2="21" stroke="white" stroke-width="1.5"/>
+        <line x1="3" y1="12" x2="6" y2="12" stroke="white" stroke-width="1.5"/>
+        <line x1="18" y1="12" x2="21" y2="12" stroke="white" stroke-width="1.5"/>
+      </svg>
+    </div>
+    <div class="brand-name">Retinal<span>AI</span></div>
+  </div>
+  <div class="topbar-meta">
+    <span class="topbar-model">EfficientNet-B3 · APTOS 2019</span>
+    <span class="topbar-badge">Research Prototype</span>
+  </div>
+</div>
+
+<div class="shell">
+
+  <!-- PAGE HEADER -->
+  <div class="page-header">
+    <div class="page-header-top">
+      <div class="page-header-left">
+        <h1>Diabetic Retinopathy Screening</h1>
+        <p>Upload a fundus photograph to receive automated DR severity grading — Grade 0 (No DR) through Grade 4 (Proliferative DR)</p>
+      </div>
+      <div class="perf-pills">
+        <div class="perf-pill blue">QWK 0.9053</div>
+        <div class="perf-pill green">Acc 83.6%</div>
+      </div>
+    </div>
+    <div class="medical-disclaimer">
+      <span>⚠</span>
+      <span><strong>Medical Disclaimer:</strong> This tool is a research prototype and is not a certified medical device. Results must not be used for clinical diagnosis or treatment decisions without evaluation by a qualified ophthalmologist.</span>
+    </div>
+  </div>
+
+  <!-- MAIN GRID -->
+  <div class="grid-2">
+
+    <!-- LEFT: INPUT -->
+    <div>
+      <!-- Upload card -->
+      <div class="card" style="margin-bottom:1.25rem">
+        <div class="card-header">
+          <span class="card-title">Fundus Image</span>
+          <span class="card-tag">PNG · JPG · JPEG</span>
+        </div>
+        <div class="card-body">
+          <div class="upload-zone" id="upload-zone">
+            <input type="file" id="file-input" accept="image/png,image/jpeg,image/jpg" onchange="handleFile(event)">
+            <div class="upload-icon">
+              <svg viewBox="0 0 24 24">
+                <path d="M21 15v4a2 2 0 01-2 2H5a2 2 0 01-2-2v-4"/>
+                <polyline points="17 8 12 3 7 8"/>
+                <line x1="12" y1="3" x2="12" y2="15"/>
+              </svg>
+            </div>
+            <div class="upload-title">Drop fundus image here</div>
+            <div class="upload-sub">or click to browse files</div>
+            <div class="upload-formats">
+              <span class="fmt-tag">PNG</span>
+              <span class="fmt-tag">JPG</span>
+              <span class="fmt-tag">JPEG</span>
+            </div>
+          </div>
+          <img class="img-preview" id="img-preview" alt="Fundus preview">
+        </div>
+      </div>
+
+      <!-- Clinical context card -->
+      <div class="card">
+        <div class="card-header">
+          <span class="card-title">Clinical Context</span>
+          <span class="card-tag">Optional</span>
+        </div>
+        <div class="card-body">
+          <div class="field-row">
+            <div class="field">
+              <label>Patient Age</label>
+              <select id="pt-age">
+                <option value="">Not specified</option>
+                <option>18 – 30</option>
+                <option>31 – 45</option>
+                <option>46 – 60</option>
+                <option>61 – 75</option>
+                <option>75+</option>
+              </select>
+            </div>
+            <div class="field">
+              <label>Diabetes Type</label>
+              <select id="pt-diabetes">
+                <option value="">Not specified</option>
+                <option>Type 1</option>
+                <option>Type 2</option>
+                <option>Gestational</option>
+              </select>
+            </div>
+          </div>
+          <div class="field-row">
+            <div class="field">
+              <label>Duration</label>
+              <select id="pt-duration">
+                <option value="">Not specified</option>
+                <option>&lt; 5 years</option>
+                <option>5 – 10 years</option>
+                <option>10 – 20 years</option>
+                <option>&gt; 20 years</option>
+              </select>
+            </div>
+            <div class="field">
+              <label>Eye</label>
+              <select id="pt-eye">
+                <option value="">Not specified</option>
+                <option>Right (OD)</option>
+                <option>Left (OS)</option>
+              </select>
+            </div>
+          </div>
+          <button class="btn-run" id="run-btn" onclick="runInference()">
+            <svg viewBox="0 0 24 24"><polygon points="5 3 19 12 5 21 5 3"/></svg>
+            Run Analysis
+          </button>
+          <div class="error-toast" id="error-toast"></div>
+        </div>
+      </div>
+    </div>
+
+    <!-- RIGHT: OUTPUT -->
+    <div class="right-panel">
+      <div class="loading-overlay" id="loading">
+        <div class="spinner"></div>
+        <div class="loading-text">Running inference...</div>
+      </div>
+
+      <!-- Placeholder -->
+      <div id="placeholder-panel">
+        <div class="card">
+          <div class="card-header">
+            <span class="card-title">Analysis Result</span>
+          </div>
+          <div class="card-body" style="padding:3rem 1.25rem;text-align:center">
+            <svg width="48" height="48" viewBox="0 0 24 24" fill="none" stroke="#ccd8e8" stroke-width="1" style="margin:0 auto 1rem;display:block">
+              <circle cx="12" cy="12" r="9"/>
+              <line x1="12" y1="8" x2="12" y2="12"/>
+              <line x1="12" y1="16" x2="12.01" y2="16"/>
+            </svg>
+            <div style="font-size:0.85rem;color:var(--ink-2);font-weight:500;margin-bottom:0.4rem">No image loaded</div>
+            <div style="font-size:0.75rem;color:#8aa0b8;font-weight:300">Upload a fundus photograph and click Run Analysis</div>
+          </div>
+        </div>
+        <div class="grid-3">
+          <div class="stat-card">
+            <div class="stat-val blue">0.905</div>
+            <div class="stat-lbl">QWK Score</div>
+          </div>
+          <div class="stat-card">
+            <div class="stat-val green">83.6%</div>
+            <div class="stat-lbl">Accuracy</div>
+          </div>
+          <div class="stat-card">
+            <div class="stat-val">3,662</div>
+            <div class="stat-lbl">Train Images</div>
+          </div>
+        </div>
+      </div>
+
+      <!-- Result panel -->
+      <div id="result-panel">
+        <div class="card">
+          <div class="card-header">
+            <span class="card-title">Grading Result</span>
+            <span class="card-tag" id="result-timestamp"></span>
+          </div>
+          <div class="card-body">
+
+            <!-- Low confidence warning -->
+            <div class="low-conf-warning" id="low-conf-warning"></div>
+
+            <!-- Grade banner -->
+            <div class="grade-banner" id="grade-banner">
+              <div class="grade-num" id="grade-num">–</div>
+              <div>
+                <div class="grade-label" id="grade-label">–</div>
+                <div class="grade-desc" id="grade-desc">–</div>
+              </div>
+            </div>
+
+            <!-- Confidence bars -->
+            <div class="conf-section-title">Class Confidence</div>
+            <div id="conf-bars"></div>
+
+            <!-- Recommendation -->
+            <div class="rec-block" id="rec-block">
+              <strong>Clinical Recommendation: </strong>
+              <span id="rec-text"></span>
+            </div>
+          </div>
+        </div>
+
+        <!-- Grad-CAM card -->
+        <div class="card cam-card" id="cam-card">
+          <div class="card-header">
+            <span class="card-title">Attention Map</span>
+            <span class="card-tag">Grad-CAM</span>
+          </div>
+          <div class="card-body" style="text-align:center">
+            <img class="cam-img" id="cam-image" src="" alt="Grad-CAM heatmap">
+            <div class="cam-caption">
+              Red/yellow areas were most influential in the prediction.<br>
+              Blue areas had minimal influence.
+            </div>
+          </div>
+        </div>
+
+        <!-- Disclaimer -->
+        <div class="result-disclaimer">
+          <span class="result-disclaimer-icon">⚠</span>
+          <span>Research prototype only. This output is not a clinical diagnosis and must not replace examination by a qualified ophthalmologist. Always refer patients with positive screening results for formal clinical evaluation.</span>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- REFERENCE TABLE -->
+  <div class="card" style="margin-top:1.25rem">
+    <div class="card-header">
+      <span class="card-title">DR Severity Scale Reference</span>
+      <span class="card-tag">ICDR Classification</span>
+    </div>
+    <div class="card-body" style="padding:0">
+      <table class="ref-table">
+        <thead>
+          <tr>
+            <th>Grade</th>
+            <th>Classification</th>
+            <th>Clinical Features</th>
+            <th>Model F1</th>
+            <th>Recommended Action</th>
+          </tr>
+        </thead>
+        <tbody>
+          <tr>
+            <td><span class="grade-badge" style="background:var(--green-bg);color:var(--green)">0</span></td>
+            <td style="font-weight:500">No DR</td>
+            <td style="color:var(--ink-3)">No abnormalities visible</td>
+            <td style="font-family:var(--mono);color:var(--green)">0.98</td>
+            <td style="color:var(--ink-3)">Routine annual screening</td>
+          </tr>
+          <tr>
+            <td><span class="grade-badge" style="background:var(--sky-light);color:var(--sky)">1</span></td>
+            <td style="font-weight:500">Mild NPDR</td>
+            <td style="color:var(--ink-3)">Microaneurysms only</td>
+            <td style="font-family:var(--mono);color:var(--sky)">0.62</td>
+            <td style="color:var(--ink-3)">6-month follow-up</td>
+          </tr>
+          <tr>
+            <td><span class="grade-badge" style="background:var(--amber-bg);color:var(--amber)">2</span></td>
+            <td style="font-weight:500">Moderate NPDR</td>
+            <td style="color:var(--ink-3)">Hemorrhages, exudates</td>
+            <td style="font-family:var(--mono);color:var(--amber)">0.80</td>
+            <td style="color:var(--ink-3)">Ophthalmology referral</td>
+          </tr>
+          <tr>
+            <td><span class="grade-badge" style="background:var(--red-bg);color:var(--red)">3</span></td>
+            <td style="font-weight:500">Severe NPDR</td>
+            <td style="color:var(--ink-3)">Extensive hemorrhages, IRMA</td>
+            <td style="font-family:var(--mono);color:var(--red)">0.36</td>
+            <td style="color:var(--ink-3)">Urgent referral within 1 week</td>
+          </tr>
+          <tr>
+            <td><span class="grade-badge" style="background:var(--purple-bg);color:var(--purple)">4</span></td>
+            <td style="font-weight:500">Proliferative DR</td>
+            <td style="color:var(--ink-3)">Neovascularization, vitreous hemorrhage</td>
+            <td style="font-family:var(--mono);color:var(--purple)">0.65</td>
+            <td style="color:var(--ink-3)">Emergency ophthalmology</td>
+          </tr>
+        </tbody>
+      </table>
+    </div>
+  </div>
+
+</div><!-- /shell -->
+
+<script>
+// ── Grade config ──────────────────────────────────────────────────────────
+const GRADES = [
+  {
+    label: 'No DR',
+    color: 'var(--green)', bg: 'var(--green-bg)', border: '#a3e6c8',
+    desc:  'No signs of diabetic retinopathy detected in this image.',
+    rec:   'Continue routine annual diabetic eye screening. Maintain glycemic and blood pressure control.',
+    bar:   '#00875a'
+  },
+  {
+    label: 'Mild NPDR',
+    color: 'var(--sky)', bg: 'var(--sky-light)', border: '#b3d0f5',
+    desc:  'Microaneurysms only — earliest detectable sign of DR.',
+    rec:   'Schedule follow-up within 6 months. Reinforce glycemic control. No treatment required at this stage.',
+    bar:   '#0066cc'
+  },
+  {
+    label: 'Moderate NPDR',
+    color: 'var(--amber)', bg: 'var(--amber-bg)', border: '#f0d070',
+    desc:  'More than mild NPDR. Hemorrhages and/or exudates present.',
+    rec:   'Refer to ophthalmology within 1–2 months. Consider panretinal photocoagulation if indicated.',
+    bar:   '#b45309'
+  },
+  {
+    label: 'Severe NPDR',
+    color: 'var(--red)', bg: 'var(--red-bg)', border: '#fca5a5',
+    desc:  'Extensive hemorrhages, venous beading, or intraretinal microvascular abnormalities (IRMA).',
+    rec:   'Urgent ophthalmology referral within 1 week. High risk of progression to PDR within 1 year.',
+    bar:   '#c0392b'
+  },
+  {
+    label: 'Proliferative DR',
+    color: 'var(--purple)', bg: 'var(--purple-bg)', border: '#c4b5fd',
+    desc:  'Neovascularization present. Risk of vitreous hemorrhage and tractional detachment.',
+    rec:   'Emergency ophthalmology referral. Anti-VEGF or panretinal laser treatment likely required.',
+    bar:   '#6d28d9'
+  }
+];
+
+// ── File handling ─────────────────────────────────────────────────────────
+function handleFile(e) {
+  const file = e.target.files[0];
+  if (!file) return;
+  const reader = new FileReader();
+  reader.onload = ev => {
+    document.getElementById('upload-zone').style.display = 'none';
+    const preview = document.getElementById('img-preview');
+    preview.style.display = 'block';
+    preview.src = ev.target.result;
+  };
+  reader.readAsDataURL(file);
+}
+
+// Drag and drop
+const zone = document.getElementById('upload-zone');
+zone.addEventListener('dragover', e => { e.preventDefault(); zone.classList.add('drag-over'); });
+zone.addEventListener('dragleave', () => zone.classList.remove('drag-over'));
+zone.addEventListener('drop', e => {
+  e.preventDefault();
+  zone.classList.remove('drag-over');
+  const file = e.dataTransfer.files[0];
+  if (file) {
+    // manually trigger handleFile
+    const dt = new DataTransfer();
+    dt.items.add(file);
+    document.getElementById('file-input').files = dt.files;
+    handleFile({ target: { files: [file] } });
+  }
+});
+
+// ── Inference ─────────────────────────────────────────────────────────────
+async function runInference() {
+  const fileInput = document.getElementById('file-input');
+  const errToast  = document.getElementById('error-toast');
+  errToast.style.display = 'none';
+
+  if (!fileInput.files || !fileInput.files[0]) {
+    showError('Please upload a fundus image first.');
+    return;
+  }
+
+  const btn     = document.getElementById('run-btn');
+  const loading = document.getElementById('loading');
+
+  btn.disabled  = true;
+  btn.innerHTML = '<div class="spinner" style="width:16px;height:16px;border-width:2px;margin:0"></div>&nbsp;Analyzing...';
+  loading.classList.add('active');
+
+  const formData = new FormData();
+  formData.append('file', fileInput.files[0]);
+
+  try {
+    const res  = await fetch('/predict', { method: 'POST', body: formData });
+    const data = await res.json();
+
+    if (!res.ok || data.error) {
+      showError(data.error || 'Server returned an error. Please try again.');
+      return;
+    }
+
+    displayResult(data);
+
+  } catch (e) {
+    showError('Connection failed: ' + e.message);
+  } finally {
+    btn.disabled  = false;
+    btn.innerHTML = '<svg viewBox="0 0 24 24" width="16" height="16" fill="none" stroke="white" stroke-width="2" stroke-linecap="round"><polygon points="5 3 19 12 5 21 5 3"/></svg> Run Analysis';
+    loading.classList.remove('active');
+  }
+}
+
+function showError(msg) {
+  const t = document.getElementById('error-toast');
+  t.textContent = '⚠ ' + msg;
+  t.style.display = 'block';
+}
+
+// ── Display result ────────────────────────────────────────────────────────
+function displayResult(data) {
+  const grade = typeof data.grade === 'number' ? data.grade : 0;
+  const probs = Array.isArray(data.probabilities) ? data.probabilities : [0,0,0,0,0];
+  const g     = GRADES[grade];
+
+  // switch panels
+  document.getElementById('placeholder-panel').style.display = 'none';
+  document.getElementById('result-panel').style.display      = 'block';
+
+  // grade banner
+  const banner = document.getElementById('grade-banner');
+  banner.style.background  = g.bg;
+  banner.style.borderColor = g.border;
+
+  const numEl = document.getElementById('grade-num');
+  numEl.textContent  = grade;
+  numEl.style.color  = g.color;
+
+  const lblEl = document.getElementById('grade-label');
+  lblEl.textContent = g.label;
+  lblEl.style.color = g.color;
+
+  document.getElementById('grade-desc').textContent = data.description || g.desc;
+
+  // confidence bars
+  const container = document.getElementById('conf-bars');
+  container.innerHTML = '';
+  probs.forEach((p, i) => {
+    const pct = Math.round(p * 100);
+    const row = document.createElement('div');
+    row.className = 'conf-row';
+    row.innerHTML = `
+      <div class="conf-label">Grade ${i} — ${GRADES[i].label}</div>
+      <div class="conf-bar-bg">
+        <div class="conf-bar-fill" style="width:0%;background:${GRADES[i].bar}"
+             data-w="${pct}"></div>
+      </div>
+      <div class="conf-pct">${pct}%</div>`;
+    container.appendChild(row);
+  });
+  // animate after paint
+  requestAnimationFrame(() => {
+    container.querySelectorAll('.conf-bar-fill').forEach(bar => {
+      bar.style.width = bar.dataset.w + '%';
+    });
+  });
+
+  // recommendation
+  const rec = document.getElementById('rec-block');
+  rec.style.background  = g.bg;
+  rec.style.borderColor = g.color;
+  rec.style.color       = g.color;
+  document.getElementById('rec-text').textContent = data.recommendation || g.rec;
+
+  // Grad-CAM
+  if (data.cam_image) {
+    document.getElementById('cam-image').src    = data.cam_image;
+    document.getElementById('cam-card').style.display = 'block';
+  } else {
+    document.getElementById('cam-card').style.display = 'none';
+  }
+
+  // low confidence
+  const warn = document.getElementById('low-conf-warning');
+  if (data.low_confidence_warning) {
+    warn.textContent    = data.low_confidence_warning;
+    warn.style.display  = 'block';
+  } else {
+    warn.style.display  = 'none';
+  }
+
+  // timestamp
+  document.getElementById('result-timestamp').textContent =
+    new Date().toLocaleTimeString('en-GB', { hour: '2-digit', minute: '2-digit' });
+
+  // scroll to result
+  setTimeout(() => {
+    document.getElementById('result-panel')
+      .scrollIntoView({ behavior: 'smooth', block: 'start' });
+  }, 100);
+}
+</script>
+</body>
+</html>
+>>>>>>> 78c9c57364f554fd517e0f31f164d365ac31342e

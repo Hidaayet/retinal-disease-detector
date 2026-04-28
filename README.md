@@ -1,3 +1,4 @@
+<<<<<<< HEAD
 
 > ⚠️ **Medical Disclaimer**
 > This tool is a research project and is **not** a medical device. It has not been
@@ -157,3 +158,15 @@ For a detailed explanation of the dataset, model architecture, training methodol
 
 **Hidayet Allah Yaakoubi**
 BME — Tunisia
+=======
+---
+title: Retinal Disease Detector
+colorFrom: indigo
+colorTo: green
+sdk: docker
+pinned: false
+license: mit
+---
+
+Check out the configuration reference at https://huggingface.co/docs/hub/spaces-config-reference
+>>>>>>> 78c9c57364f554fd517e0f31f164d365ac31342e
