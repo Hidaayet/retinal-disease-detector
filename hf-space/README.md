@@ -1,6 +1,5 @@
 ---
 title: Retinal Disease Detector
-emoji: 👁️
 colorFrom: indigo
 colorTo: green
 sdk: docker
