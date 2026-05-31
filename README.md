@@ -1,13 +1,3 @@
----
-title: Retinal Disease Detector
-emoji: 👁
-colorFrom: blue
-colorTo: purple
-sdk: docker
-pinned: false
----
-<<<<<<< HEAD
-
 > ⚠️ **Medical Disclaimer**
 > This tool is a research project and is **not** a medical device. It has not been
 > validated for clinical use and must not be used to diagnose, treat, or make
