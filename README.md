@@ -167,4 +167,3 @@ license: mit
 ---
 
 Check out the configuration reference at https://huggingface.co/docs/hub/spaces-config-reference
->>>>>>> 78c9c57364f554fd517e0f31f164d365ac31342e
