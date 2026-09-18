@@ -1,3 +1,12 @@
+---
+title: Retinal Disease Detector
+colorFrom: indigo
+colorTo: green
+sdk: docker
+pinned: false
+license: mit
+---
+
 > ⚠️ **Medical Disclaimer**
 > This tool is a research project and is **not** a medical device. It has not been
 > validated for clinical use and must not be used to diagnose, treat, or make
@@ -70,9 +79,9 @@ retinal-disease-detector/
 ├── Dockerfile
 ├── requirements.txt
 └── README.md
-> Training code is in `notebooks/02_model_training.ipynb`. The model weights (`best_model.pth`) are stored separately and loaded at runtime.
-
 ```
+
+> Training code is in `notebooks/02_model_training.ipynb`. The model weights (`best_model.pth`) are stored separately and loaded at runtime.
 ## Results
 
 ### Overall Performance
@@ -156,14 +165,3 @@ For a detailed explanation of the dataset, model architecture, training methodol
 
 **Hidayet Allah Yaakoubi**
 BME — Tunisia
-=======
----
-title: Retinal Disease Detector
-colorFrom: indigo
-colorTo: green
-sdk: docker
-pinned: false
-license: mit
----
-
-Check out the configuration reference at https://huggingface.co/docs/hub/spaces-config-reference
