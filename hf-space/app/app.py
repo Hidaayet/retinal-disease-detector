@@ -1,7 +1,7 @@
+import base64
 import io
 import logging
 import os
-import base64
 
 import cv2
 import numpy as np
@@ -13,7 +13,7 @@ from flask import Flask, jsonify, render_template, request
 from PIL import Image
 from torchvision import transforms
 
-# ── logging ────────────────────────────────────────────────────────────────
+# -- logging ---------------------------------------------------------------
 logging.basicConfig(
     level=logging.INFO,
     format="%(asctime)s  %(levelname)s  %(message)s",
@@ -23,14 +23,14 @@ logger = logging.getLogger(__name__)
 
 app = Flask(__name__)
 
-# ── constants ──────────────────────────────────────────────────────────────
+# -- constants ---------------------------------------------------------------
 MAX_FILE_SIZE_MB = 10
 ALLOWED_EXTENSIONS = {"png", "jpg", "jpeg"}
 LOW_CONFIDENCE_THRESHOLD = 0.60
 
-# ── model definition ───────────────────────────────────────────────────────
+# -- model definition ---------------------------------------------------------------
 # MUST match the architecture used during training exactly.
-# EfficientNet-B3 backbone → Dropout → Linear(1536→256) → ReLU → Dropout → Linear(256→5)
+# EfficientNet-B3 backbone -> Dropout -> Linear(1536->256) -> ReLU -> Dropout -> Linear(256->5)
 class RetinalClassifier(nn.Module):
     def __init__(self, num_classes=5, dropout=0.3):
         super().__init__()
@@ -49,21 +49,21 @@ class RetinalClassifier(nn.Module):
         return self.classifier(self.backbone(x))
 
 
-# ── Grad-CAM ───────────────────────────────────────────────────────────────
+# -- Grad-CAM ---------------------------------------------------------------
 class GradCAM:
     """Gradient-weighted Class Activation Mapping for EfficientNet-B3.
 
     Hooks onto conv_head (the final conv layer before global pooling).
     NOTE: generate() temporarily enables grad mode even when the model is in
-    eval() — this is intentional and does NOT affect batch-norm statistics.
+    eval() -- this is intentional and does NOT affect batch-norm statistics.
     """
 
     def __init__(self, model: nn.Module):
         self.model = model
-        self.activations: torch.Tensor | None = None
-        self.gradients: torch.Tensor | None = None
+        self.activations = None
+        self.gradients = None
 
-        # conv_head is the last conv before the classifier — best Grad-CAM target
+        # conv_head is the last conv before the classifier -- best Grad-CAM target
         target = model.backbone.conv_head
         target.register_forward_hook(self._save_activation)
         target.register_full_backward_hook(self._save_gradient)
@@ -76,8 +76,8 @@ class GradCAM:
         self.gradients = grad_output[0].detach()
 
     def generate(self, input_tensor: torch.Tensor, class_idx: int) -> np.ndarray:
-        """Return a normalised (0–1) CAM array of shape (300, 300)."""
-        # Grad-CAM requires gradients — temporarily enable them even in eval mode
+        """Return a normalised (0-1) CAM array of shape (300, 300)."""
+        # Grad-CAM requires gradients -- temporarily enable them even in eval mode
         self.model.zero_grad()
 
         # Run forward WITHOUT no_grad so the graph is built for backward()
@@ -89,7 +89,7 @@ class GradCAM:
 
         # Both hooks must have fired by now
         if self.activations is None or self.gradients is None:
-            raise RuntimeError("Grad-CAM hooks did not fire — check hook target layer.")
+            raise RuntimeError("Grad-CAM hooks did not fire -- check hook target layer.")
 
         weights = self.gradients.mean(dim=(2, 3), keepdim=True)  # (1, C, 1, 1)
         cam = F.relu((weights * self.activations).sum(dim=1, keepdim=True))  # (1,1,H,W)
@@ -114,16 +114,15 @@ def _overlay_heatmap(image_bytes: bytes, cam: np.ndarray) -> str:
     return "data:image/png;base64," + base64.b64encode(buf.getvalue()).decode()
 
 
-# ── load model ─────────────────────────────────────────────────────────────
+# -- load model ---------------------------------------------------------------
 # The model file is expected at  <repo_root>/data/best_model.pth
 # Inside Docker this resolves to /app/data/best_model.pth  (Dockerfile sets WORKDIR /app
 # and does: COPY data/best_model.pth ./data/best_model.pth)
 device = torch.device("cpu")
-model: RetinalClassifier | None = None
-grad_cam: GradCAM | None = None
+model = None
+grad_cam = None
 
-# ── FIX: resolve model path robustly ──────────────────────────────────────
-# __file__ = /app/app/app.py  →  dirname = /app/app  →  ../data = /app/data ✓
+# __file__ = /app/app/app.py  ->  dirname = /app/app  ->  ../data = /app/data  (correct)
 _HERE = os.path.dirname(os.path.abspath(__file__))
 MODEL_PATH = os.path.join(_HERE, "..", "data", "best_model.pth")
 
@@ -135,7 +134,7 @@ try:
         )
 
     model = RetinalClassifier().to(device)
-    # ── FIX: train.py saves torch.save(model.state_dict(), path) — a raw OrderedDict,
+    # train.py saves torch.save(model.state_dict(), path) -- a raw OrderedDict,
     # NOT wrapped in {"model_state_dict": ...}.  We handle all three formats defensively.
     checkpoint = torch.load(MODEL_PATH, map_location=device)
 
@@ -157,15 +156,15 @@ try:
 
     grad_cam = GradCAM(model)
     n_params = sum(p.numel() for p in model.parameters())
-    logger.info("✓ Model loaded — %d parameters — path: %s", n_params, MODEL_PATH)
+    logger.info("Model loaded -- %d parameters -- path: %s", n_params, MODEL_PATH)
 
 except FileNotFoundError as exc:
-    logger.error("✗ %s", exc)
+    logger.error("%s", exc)
 except Exception:
-    logger.exception("✗ Failed to load model — predictions unavailable")
+    logger.exception("Failed to load model -- predictions unavailable")
 
 
-# ── grade metadata ─────────────────────────────────────────────────────────
+# -- grade metadata ---------------------------------------------------------------
 GRADES = {
     0: {
         "label": "No DR",
@@ -180,7 +179,7 @@ GRADES = {
     1: {
         "label": "Mild NPDR",
         "full": "Mild Non-Proliferative Diabetic Retinopathy",
-        "description": "Microaneurysms only — earliest detectable sign of DR.",
+        "description": "Microaneurysms only -- earliest detectable sign of DR.",
         "recommendation": (
             "Schedule follow-up within 6 months. Reinforce glycemic control."
         ),
@@ -194,7 +193,7 @@ GRADES = {
             "Hemorrhages and/or exudates present."
         ),
         "recommendation": (
-            "Refer to ophthalmology within 1–2 months. "
+            "Refer to ophthalmology within 1-2 months. "
             "Consider panretinal photocoagulation if indicated."
         ),
         "color": "#b45309",
@@ -227,11 +226,11 @@ GRADES = {
     },
 }
 
-# ── preprocessing ──────────────────────────────────────────────────────────
+# -- preprocessing ---------------------------------------------------------------
 # Must exactly match the pipeline in model/dataset.py used during training:
 #   1. Load image as RGB
 #   2. Apply CLAHE on the L channel (LAB colour space)
-#   3. Resize to 300×300
+#   3. Resize to 300x300
 #   4. ToTensor + ImageNet normalisation
 def _allowed_file(filename: str) -> bool:
     return "." in filename and filename.rsplit(".", 1)[1].lower() in ALLOWED_EXTENSIONS
@@ -246,7 +245,7 @@ def _apply_clahe(img_rgb: np.ndarray) -> np.ndarray:
     return cv2.cvtColor(cv2.merge([l, a, b]), cv2.COLOR_LAB2RGB)
 
 
-# Validation-time transform (no augmentation) — mirrors get_transforms(is_train=False)
+# Validation-time transform (no augmentation) -- mirrors get_transforms(is_train=False)
 _transform = transforms.Compose([
     transforms.Resize((300, 300)),
     transforms.ToTensor(),
@@ -255,13 +254,13 @@ _transform = transforms.Compose([
 
 
 def _preprocess(image_bytes: bytes) -> torch.Tensor:
-    """Read raw image bytes → normalised (1, 3, 300, 300) tensor."""
+    """Read raw image bytes -> normalised (1, 3, 300, 300) tensor."""
     img = Image.open(io.BytesIO(image_bytes)).convert("RGB")
     img_np = _apply_clahe(np.array(img))
     return _transform(Image.fromarray(img_np)).unsqueeze(0)
 
 
-# ── routes ─────────────────────────────────────────────────────────────────
+# -- routes ---------------------------------------------------------------
 @app.route("/")
 def index():
     return render_template("index.html")
@@ -269,7 +268,7 @@ def index():
 
 @app.route("/health")
 def health():
-    """Liveness check — call this to verify the model loaded correctly."""
+    """Liveness check -- call this to verify the model loaded correctly."""
     return jsonify({
         "status": "ok",
         "model_loaded": model is not None,
@@ -281,13 +280,13 @@ def health():
 
 @app.route("/debug", methods=["POST"])
 def debug():
-    """Debug endpoint — returns raw logits and softmax probs for any uploaded image.
+    """Debug endpoint -- returns raw logits and softmax probs for any uploaded image.
 
     Usage:
         curl -X POST https://<space>/debug -F "file=@image.jpg" | python -m json.tool
     """
     if model is None:
-        return jsonify({"error": "model not loaded — check /health for details"}), 503
+        return jsonify({"error": "model not loaded -- check /health for details"}), 503
     if "file" not in request.files:
         return jsonify({"error": "no file provided"}), 400
 
@@ -318,16 +317,16 @@ def debug():
 
 @app.route("/predict", methods=["POST"])
 def predict():
-    # ── guard: model must be loaded ────────────────────────────────────────
+    # -- guard: model must be loaded ---------------------------------------------------------------
     if model is None:
         return jsonify({
             "error": (
                 "Model not available. "
-                "Visit /health to diagnose — the weights file may be missing."
+                "Visit /health to diagnose -- the weights file may be missing."
             )
         }), 503
 
-    # ── guard: file presence & type ────────────────────────────────────────
+    # -- guard: file presence & type ---------------------------------------------------------------
     if "file" not in request.files:
         return jsonify({"error": "No file uploaded."}), 400
     file = request.files["file"]
@@ -344,7 +343,7 @@ def predict():
         }), 400
 
     try:
-        # ── inference (no_grad for memory efficiency) ──────────────────────
+        # -- inference (no_grad for memory efficiency) --------------------------
         tensor = _preprocess(image_bytes).to(device)
 
         with torch.no_grad():
@@ -361,22 +360,22 @@ def predict():
             grade, grade_info["label"], confidence * 100,
         )
 
-        # ── Grad-CAM (separate forward with gradients enabled) ─────────────
+        # -- Grad-CAM (separate forward with gradients enabled) -----------------
         # We intentionally call _preprocess again so the inference tensor
         # (computed under no_grad) is not entangled with the grad-CAM graph.
         cam_image_b64 = None
         if grad_cam is not None:
             try:
-                # grad_cam.generate() calls backward() internally — must NOT
+                # grad_cam.generate() calls backward() internally -- must NOT
                 # be inside a torch.no_grad() block.
                 tensor_grad = _preprocess(image_bytes).to(device)
                 cam = grad_cam.generate(tensor_grad, grade)
                 cam_image_b64 = _overlay_heatmap(image_bytes, cam)
                 logger.info("Grad-CAM generated successfully")
             except Exception:
-                logger.warning("Grad-CAM generation failed — skipping heatmap", exc_info=True)
+                logger.warning("Grad-CAM generation failed -- skipping heatmap", exc_info=True)
 
-        # ── build response ─────────────────────────────────────────────────
+        # -- build response -------------------------------------------------
         return jsonify({
             "grade":          grade,
             "label":          grade_info["label"],
@@ -395,7 +394,7 @@ def predict():
             "cam_image":      cam_image_b64,
             "low_confidence": low_conf,
             "low_confidence_warning": (
-                "⚠ Low confidence — result may be unreliable. "
+                "Low confidence -- result may be unreliable. "
                 "Please consult a qualified ophthalmologist."
                 if low_conf else None
             ),
@@ -407,5 +406,5 @@ def predict():
 
 
 if __name__ == "__main__":
-    # Development only — production uses Gunicorn (see Dockerfile CMD)
+    # Development only -- production uses Gunicorn (see Dockerfile CMD)
     app.run(host="0.0.0.0", port=7860, debug=False)
