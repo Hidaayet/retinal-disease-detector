@@ -408,3 +408,7 @@ def predict():
 if __name__ == "__main__":
     # Development only -- production uses Gunicorn (see Dockerfile CMD)
     app.run(host="0.0.0.0", port=7860, debug=False)
+
+    # Generated outputs
+outputs/*.png
+outputs/*.jpg
