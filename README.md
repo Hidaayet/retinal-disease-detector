@@ -1,3 +1,79 @@
+---
+title: Retinal Disease Detector
+colorFrom: indigo
+colorTo: green
+sdk: docker
+pinned: false
+license: mit
+---
+
+> ⚠️ **Medical Disclaimer**
+> This is a research and portfolio project, not a medical device. It has not
+> been validated for clinical use and must not be used to diagnose, treat, or
+> inform decisions about any medical condition. Always consult a qualified
+> ophthalmologist.
+
+# Retinal Disease Detector
+
+A deep learning web application that grades diabetic retinopathy severity
+from fundus retinal images, using a fine-tuned EfficientNet-B3 classifier
+across five severity levels.
+
+**Project status:** Complete — model trained, evaluated, and deployed.
+
+## What it does
+
+A user uploads a fundus retinal image through the web interface. The system
+preprocesses the image, passes it through a fine-tuned EfficientNet-B3 model,
+and returns a diabetic retinopathy severity grade (0–4) with per-class
+confidence scores in under two seconds.
+
+## Severity grades
+
+| Grade | Label | Description |
+|---|---|---|
+| 0 | No DR | Healthy retina |
+| 1 | Mild | Microaneurysms only |
+| 2 | Moderate | More than mild, less than severe |
+| 3 | Severe | Extensive damage, no proliferative signs |
+| 4 | Proliferative DR | Most severe, neovascularization present |
+
+## System architecture
+
+![Architecture](outputs/retinal_architecture.png)
+
+## Tech stack
+
+| Layer | Technology |
+|---|---|
+| Model architecture | EfficientNet-B3 (pretrained on ImageNet) |
+| Deep learning | PyTorch, torchvision |
+| Image processing | OpenCV, PIL |
+| Web backend | Flask |
+| Frontend | HTML, CSS, JavaScript |
+| Dataset | APTOS 2019 Blindness Detection (Kaggle) |
+
+## Project structure
+
+retinal-disease-detector/
+├── app/
+│ ├── app.py
+│ ├── static/
+│ └── templates/
+│ └── index.html
+├── model/
+│ ├── dataset.py
+│ ├── model.py
+│ ├── train.py
+│ └── evaluate.py
+├── notebooks/
+│ ├── 01_data_exploration.ipynb
+│ └── 02_model_training.ipynb
+├── docs/
+│ └── SPEC.md
+├── Dockerfile
+├── requirements.txt
+└── README.md
 
 Training code lives in `model/train.py` (see `notebooks/02_model_training.ipynb`
 for the original exploratory run). Model weights (`best_model.pth`) are
