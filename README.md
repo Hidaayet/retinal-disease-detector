@@ -164,7 +164,7 @@ severity grade.
 
 For a detailed explanation of the dataset, model architecture, training
 methodology, and results, see the
-[full project report](docs/Retinal_Disease_Detector_Report.pdf).
+[full project report](Retinal_disease_report.pdf).
 
 ## Author
 
