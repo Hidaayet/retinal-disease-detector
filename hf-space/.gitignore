@@ -11,3 +11,6 @@ __pycache__/
 # Jupyter checkpoints
 .ipynb_checkpoints/
 
+# Generated outputs
+outputs/*.png
+outputs/*.jpg
