@@ -167,8 +167,7 @@ methodology, and results, see the
 [full project report](Retinal_disease_report.pdf).
 
 ## Live Demo
-Live Demo.mp4
-
+[▶ Watch a live demo](Live_Demo.mp4)  — upload a fundus image and get an instant diabetic retinopathy grade with a Grad-CAM attention map.
 ## Author
 
 **Hidayet Allah Yaakoubi**
