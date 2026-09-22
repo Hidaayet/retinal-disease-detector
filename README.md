@@ -158,13 +158,16 @@ severity grade.
 - [x] Model evaluation
 - [x] Web app — working locally
 - [x] Deployed online — live public demo
-- [ ] Demo video
+- [x] Demo video
 
 ## Full project report
 
 For a detailed explanation of the dataset, model architecture, training
 methodology, and results, see the
 [full project report](Retinal_disease_report.pdf).
+
+## Live Demo
+Live Demo.mp4
 
 ## Author
 
