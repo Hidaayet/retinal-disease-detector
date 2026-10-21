@@ -167,7 +167,7 @@ methodology, and results, see the
 [full project report](Retinal_disease_report.pdf).
 
 ## Live Demo
-[▶ Watch a live demo](Ollie_and_the_Robot_Eye_Doctor (Live Demo).mp4)  — upload a fundus image and get an instant diabetic retinopathy grade with a Grad-CAM attention map.
+[▶ Watch a live demo]([Ollie_and_the_Robot_Eye_Doctor (Live Demo).mp4](https://youtu.be/r7EhoY2_gE0))  — upload a fundus image and get an instant diabetic retinopathy grade with a Grad-CAM attention map.
 ## Author
 
 **Hidayet Allah Yaakoubi**
